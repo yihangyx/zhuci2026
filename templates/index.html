@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抖音视频解析工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-item .label {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .url-box {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .url-box .label {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .url-box .url-content {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .url-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .url-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            border: 2px solid #f00;
+            color: #c00;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 抖音视频解析工具</h1>
+            <p>输入抖音链接，快速获取视频信息</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="请输入抖音链接或包含链接的文本" />
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="parseBtn" onclick="parseVideo()">解析</button>
+                <button class="btn btn-secondary" onclick="pasteAndParse()">粘贴并解析</button>
+                <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在解析，请稍候...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-card">
+                <h3>📋 视频信息</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">标题</div>
+                        <div class="value" id="videoTitle">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">作者</div>
+                        <div class="value" id="videoAuthor">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">点赞数</div>
+                        <div class="value" id="videoLike">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">发布时间</div>
+                        <div class="value" id="videoTime">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>🔗 链接信息</h3>
+                <div class="url-box">
+                    <div class="label">视频地址</div>
+                    <div class="url-content">
+                        <input type="text" id="videoUrl" readonly />
+                        <button class="btn-action" onclick="copyVideoUrl()">复制链接</button>
+                        <button class="btn-action" onclick="openInBrowser()">在浏览器打开</button>
+                    </div>
+                </div>
+
+                <div class="url-box" id="coverBox" style="display: none;">
+                    <div class="label">封面地址</div>
+                    <div class="url-content">
+                        <input type="text" id="coverUrl" readonly />
+                        <button class="btn-action" onclick="copyCoverUrl()">复制链接</button>
+                    </div>
+                </div>
+
+                <div class="url-box" id="musicBox" style="display: none;">
+                    <div class="label">音乐地址</div>
+                    <div class="url-content">
+                        <input type="text" id="musicUrl" readonly />
+                        <button class="btn-action" onclick="copyMusicUrl()">复制链接</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action" onclick="downloadVideo()">下载视频</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideoUrl = '';
+
+        async function parseVideo() {
+            const urlInput = document.getElementById('urlInput');
+            const parseBtn = document.getElementById('parseBtn');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultSection = document.getElementById('resultSection');
+
+            const inputText = urlInput.value.trim();
+
+            if (!inputText) {
+                showError('请输入内容！');
+                return;
+            }
+
+            parseBtn.disabled = true;
+            loading.classList.add('active');
+            errorMessage.classList.remove('active');
+            resultSection.classList.remove('active');
+
+            try {
+                const response = await fetch('/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: inputText })
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                parseBtn.disabled = false;
+
+                if (data.success) {
+                    displayResult(data);
+                } else {
+                    showError(data.error || '解析失败，请检查链接是否有效');
+                }
+            } catch (error) {
+                loading.classList.remove('active');
+                parseBtn.disabled = false;
+                showError('网络错误，请稍后重试');
+            }
+        }
+
+        function displayResult(data) {
+            const resultSection = document.getElementById('resultSection');
+
+            document.getElementById('videoTitle').textContent = data.title || '-';
+            document.getElementById('videoAuthor').textContent = data.author || '-';
+            document.getElementById('videoLike').textContent = data.like || '-';
+            document.getElementById('videoTime').textContent = data.time || '-';
+            document.getElementById('videoUrl').value = data.video_url || '';
+
+            currentVideoUrl = data.video_url || '';
+
+            if (data.cover) {
+                document.getElementById('coverUrl').value = data.cover;
+                document.getElementById('coverBox').style.display = 'block';
+            } else {
+                document.getElementById('coverBox').style.display = 'none';
+            }
+
+            if (data.music) {
+                document.getElementById('musicUrl').value = data.music;
+                document.getElementById('musicBox').style.display = 'block';
+            } else {
+                document.getElementById('musicBox').style.display = 'none';
+            }
+
+            resultSection.classList.add('active');
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        async function pasteAndParse() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('urlInput').value = text;
+                parseVideo();
+            } catch (error) {
+                showError('粘贴失败，请手动粘贴');
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('loading').classList.remove('active');
+            currentVideoUrl = '';
+        }
+
+        function copyVideoUrl() {
+            const url = document.getElementById('videoUrl').value;
+            copyToClipboard(url, '视频链接已复制！');
+        }
+
+        function copyCoverUrl() {
+            const url = document.getElementById('coverUrl').value;
+            copyToClipboard(url, '封面链接已复制！');
+        }
+
+        function copyMusicUrl() {
+            const url = document.getElementById('musicUrl').value;
+            copyToClipboard(url, '音乐链接已复制！');
+        }
+
+        async function copyToClipboard(text, successMessage) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert(successMessage);
+            } catch (error) {
+                showError('复制失败');
+            }
+        }
+
+        function openInBrowser() {
+            if (currentVideoUrl) {
+                window.open(currentVideoUrl, '_blank');
+            }
+        }
+
+        function downloadVideo() {
+            if (currentVideoUrl) {
+                const a = document.createElement('a');
+                a.href = currentVideoUrl;
+                a.download = 'douyin_video.mp4';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                parseVideo();
+            }
+        });
+    </script>
+</body>
+</html>
