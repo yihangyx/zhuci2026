@@ -16,7 +16,7 @@
             align-items: center;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             width: 100%;
             background: white;
             border-radius: 28px;
@@ -30,7 +30,21 @@
         }
         .header h1 { font-size: 1.6rem; margin-bottom: 4px; }
         .header p { opacity: 0.7; font-size: 0.85rem; }
-        .content { padding: 28px; }
+        .content {
+            padding: 28px;
+            display: flex;
+            gap: 28px;
+        }
+        .left-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        .right-section {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
         .field { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .field label { width: 70px; font-weight: 500; color: #333; }
         .field input {
@@ -71,16 +85,23 @@
             background: #0F172A;
             border-radius: 20px;
             padding: 16px;
-            height: 300px;
+            flex: 1;
             overflow-y: auto;
             font-family: 'Consolas', monospace;
             font-size: 0.8rem;
-            margin-top: 16px;
         }
         .log-line { padding: 6px 0; border-bottom: 1px solid #2d3a4a; color: #e2e8f0; white-space: pre-wrap; }
         .log-success { color: #4ade80; }
         .log-error { color: #f87171; }
         .log-warning { color: #fbbf24; }
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            .right-section {
+                min-height: 300px;
+            }
+        }
         .success-modal {
             position: fixed;
             top: 0; left: 0;
@@ -109,44 +130,47 @@
         <p>制作者：奕涵 | 仅限临时注册使用</p>
     </div>
     <div class="content">
-        <div class="field">
-            <label>用户名</label>
-            <input type="text" id="username" placeholder="自动生成">
-        </div>
-        <div class="field">
-            <label>密码</label>
-            <input type="text" id="password" placeholder="自动生成">
-        </div>
-        <div class="field">
-            <label>邮箱</label>
-            <input type="text" id="email" placeholder="点击「生成邮箱」">
-        </div>
-        <div class="field">
-            <label>邀请人</label>
-            <input type="text" id="invite" placeholder="选填">
-        </div>
-        <div class="field">
-            <label>验证码</label>
-            <input type="text" id="code" placeholder="自动填写">
-        </div>
+        <div class="left-section">
+            <div class="field">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="自动生成">
+            </div>
+            <div class="field">
+                <label>密码</label>
+                <input type="text" id="password" placeholder="自动生成">
+            </div>
+            <div class="field">
+                <label>邮箱</label>
+                <input type="text" id="email" placeholder="点击「生成邮箱」">
+            </div>
+            <div class="field">
+                <label>邀请人</label>
+                <input type="text" id="invite" placeholder="选填">
+            </div>
+            <div class="field">
+                <label>验证码</label>
+                <input type="text" id="code" placeholder="自动填写">
+            </div>
 
-        <div class="btn-group">
-            <button id="randomBtn" class="btn btn-blue">🎲 随机账号</button>
-            <button id="genEmailBtn" class="btn btn-cyan">📬 生成邮箱</button>
-            <button id="sendCodeBtn" class="btn btn-pink">📨 发送验证码</button>
-            <button id="refreshBtn" class="btn btn-gray">🔄 刷新邮件</button>
-            <button id="registerBtn" class="btn btn-green">✅ 立即注册</button>
-        </div>
+            <div class="btn-group">
+                <button id="randomBtn" class="btn btn-blue">🎲 随机账号</button>
+                <button id="genEmailBtn" class="btn btn-cyan">📬 生成邮箱</button>
+                <button id="sendCodeBtn" class="btn btn-pink">📨 发送验证码</button>
+                <button id="refreshBtn" class="btn btn-gray">🔄 刷新邮件</button>
+                <button id="registerBtn" class="btn btn-green">✅ 立即注册</button>
+            </div>
 
-        <div class="status-bar">
-            <span id="statusText" class="status">● 就绪</span>
-            <span id="successCount">✅ 成功：0</span>
+            <div class="status-bar">
+                <span id="statusText" class="status">● 就绪</span>
+                <span id="successCount">✅ 成功：0</span>
+            </div>
         </div>
-
-        <div class="log-area" id="logArea">
-            <div class="log-line">✨ 工具启动成功</div>
-            <div class="log-line">🔧 已通过代理解决跨域问题</div>
-            <div class="log-line">━━━━━━━━━━━━━━━━━━━━</div>
+        <div class="right-section">
+            <div class="log-area" id="logArea">
+                <div class="log-line">✨ 工具启动成功</div>
+                <div class="log-line">🔧 已通过代理解决跨域问题</div>
+                <div class="log-line">━━━━━━━━━━━━━━━━━━━━</div>
+            </div>
         </div>
     </div>
 </div>
