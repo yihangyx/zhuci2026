@@ -1,0 +1,453 @@
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
+import requests
+import json
+import threading
+import random
+import string
+import uuid
+import time
+import re
+import sys
+import os
+
+
+class MailTMApi:
+    def __init__(self):
+        self.base_url = "https://api.mail.tm"
+        self.token = None
+        self.address = None
+        self.password = None
+        self.last_check_time = 0
+
+    def reset(self):
+        self.token = None
+        self.address = None
+        self.password = None
+        self.last_check_time = 0
+
+    def get_domains(self):
+        url = f"{self.base_url}/domains"
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                return response.json().get("hydra:member", [])
+        except:
+            pass
+        return []
+
+    def create_account(self, username=None):
+        domains = self.get_domains()
+        if not domains:
+            return None
+
+        domain = domains[0]['domain']
+        if not username:
+            username = f"user{generate_random_string()}"
+
+        password = generate_random_string(12)
+        url = f"{self.base_url}/accounts"
+        data = {
+            "address": f"{username}@{domain}",
+            "password": password
+        }
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            response = requests.post(url, json=data, headers=headers, timeout=5)
+            if response.status_code == 201:
+                self.address = data["address"]
+                self.password = password
+                return data["address"]
+        except:
+            pass
+        return None
+
+    def get_token(self):
+        if not self.address or not self.password:
+            return None
+
+        url = f"{self.base_url}/token"
+        data = {
+            "address": self.address,
+            "password": self.password
+        }
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            response = requests.post(url, json=data, headers=headers, timeout=5)
+            if response.status_code == 200:
+                self.token = response.json().get("token")
+                return self.token
+        except:
+            pass
+        return None
+
+    def get_messages(self):
+        if not self.token:
+            self.get_token()
+
+        if not self.token:
+            return []
+
+        url = f"{self.base_url}/messages"
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.get(url, headers=headers, timeout=8)
+            if response.status_code == 200:
+                return response.json().get("hydra:member", [])
+        except:
+            pass
+        return []
+
+    def get_message_content(self, message_id):
+        if not self.token:
+            self.get_token()
+
+        url = f"{self.base_url}/messages/{message_id}"
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.get(url, headers=headers, timeout=8)
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return None
+
+    def extract_6digit_code(self):
+        messages = self.get_messages()
+        for msg in messages:
+            full = self.get_message_content(msg.get("id"))
+            if not full:
+                continue
+            text = full.get("text", "") + full.get("html", "")
+            match = re.findall(r'\d{6}', text)
+            for code in match:
+                if code.isdigit() and len(code) == 6:
+                    return code
+        return None
+
+
+class JSAutoTaskRegister:
+    def __init__(self, base_url="https://jsautotask.com"):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.device_uid = str(uuid.uuid4())
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/plain, */*",
+            "Origin": base_url,
+            "Referer": f"{base_url}/register"
+        })
+
+    def get_device_uid(self):
+        return self.device_uid
+
+    def send_email_code(self, email):
+        url = self.base_url + "/api/register/getEmail"
+        data = {"email": email}
+        try:
+            response = self.session.post(url, json=data, timeout=8)
+            return response.json()
+        except:
+            return {"error": "网络错误"}
+
+    def register(self, username, password, email, email_code, invite_user=""):
+        url = self.base_url + "/api/register/register"
+        register_data = {
+            "username": username, "password": password, "confirmPassword": password,
+            "email": email, "emailCode": email_code, "inviteUser": invite_user
+        }
+        try:
+            response = self.session.post(url, json=register_data, timeout=8)
+            return response.json()
+        except:
+            return {"error": "网络错误"}
+
+
+def generate_random_string(length=8):
+    letters = string.ascii_lowercase + string.digits
+    return ''.join(random.choice(letters) for _ in range(length))
+
+def generate_random_username():
+    prefixes = ['user', 'test', 'demo', 'guest', 'admin']
+    suffix = ''.join(random.choice(string.digits) for _ in range(4))
+    return random.choice(prefixes) + suffix
+
+def generate_random_password():
+    lowercase = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
+    uppercase = ''.join(random.choice(string.ascii_uppercase) for _ in range(2))
+    digits = ''.join(random.choice(string.digits) for _ in range(3))
+    password = list(lowercase + uppercase + digits)
+    random.shuffle(password)
+    return ''.join(password)
+
+
+# ====================================== 主UI ======================================
+class RegisterUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("临时账号注册")
+        self.root.geometry("700x440")
+        self.root.resizable(False, False)
+        self.root.configure(bg="#F0F2F5")
+
+        try:
+            base_path = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+            icon_path = os.path.join(base_path, "favicon.ico")
+            self.root.iconbitmap(icon_path)
+        except:
+            pass
+
+        self.api = JSAutoTaskRegister()
+        self.mail_api = MailTMApi()
+        self.success_count = 0
+        self.init_ui()
+
+        self.log_msg("制作者：奕涵")
+        self.log_msg("只限用于临时注册")
+        self.log_msg("长时间使用当前账号")
+        self.log_msg("需要购买他们的卡密")
+        self.log_msg("工具启动成功邀请人默认不填写")
+        self.log_msg("==========================")
+    def init_ui(self):
+        header = tk.Frame(self.root, bg="#2D3744", height=50)
+        header.pack(fill=tk.X)
+        header.pack_propagate(False)
+        tk.Label(header, text="自动化注册工具", bg="#2D3744", fg="white", font=("微软雅黑",13,"bold")).pack(side=tk.LEFT,padx=20,pady=10)
+        tk.Label(header,text="by：奕涵",bg="#2D3744",fg="#ccc",font=("微软雅黑",9)).pack(side=tk.RIGHT,padx=20,pady=10)
+
+        main = tk.Frame(self.root,bg="white",bd=0,relief=tk.FLAT)
+        main.pack(fill=tk.BOTH,expand=True,padx=20,pady=15)
+
+        form = tk.Frame(main,bg="white")
+        form.pack(side=tk.LEFT,fill=tk.BOTH,expand=True,padx=10,pady=10)
+
+        self.user = self.add_field(form,"用户名")
+        self.pwd = self.add_field(form,"密　码")
+        self.email = self.add_field(form,"邮   箱")
+        # ====================== 已互换：邀请人在上，验证码在下 ======================
+        self.invite = self.add_field(form,"邀请人")
+        self.code = self.add_field(form,"验证码")
+
+        btn_box = tk.Frame(form,bg="white")
+        btn_box.pack(fill=tk.X,pady=12)
+        tk.Button(btn_box,text="随机账号",bg="#4F46E5",fg="white",bd=0,padx=10,pady=6,command=self.random_account).pack(side=tk.LEFT,padx=2,fill=tk.X,expand=True)
+        tk.Button(btn_box,text="生成邮箱",bg="#0099FF",fg="white",bd=0,padx=10,pady=6,command=self.generate_email).pack(side=tk.LEFT,padx=2,fill=tk.X,expand=True)
+        tk.Button(btn_box,text="发送验证码",bg="#FF3366",fg="white",bd=0,padx=10,pady=6,command=self.send_code).pack(side=tk.LEFT,padx=2,fill=tk.X,expand=True)
+        tk.Button(btn_box,text="刷新邮件",bg="#6B7280",fg="white",bd=0,padx=10,pady=6,command=self.refresh_messages).pack(side=tk.LEFT,padx=2,fill=tk.X,expand=True)
+        self.btn_reg = tk.Button(btn_box,text="立即注册",bg="#16A34A",fg="white",bd=0,padx=10,pady=6,command=self.register)
+        self.btn_reg.pack(side=tk.LEFT,padx=2,fill=tk.X,expand=True)
+
+        status_bar = tk.Frame(form,bg="white")
+        status_bar.pack(fill=tk.X)
+        self.status = tk.Label(status_bar,text="就绪",bg="white",fg="#16A34A",font=("微软雅黑",9))
+        self.status.pack(side=tk.LEFT)
+        self.count_lb = tk.Label(status_bar,text=f"成功：{self.success_count}",bg="white",fg="#333",font=("微软雅黑",9))
+        self.count_lb.pack(side=tk.RIGHT)
+
+        log_frame = tk.Frame(main,bg="white")
+        log_frame.pack(side=tk.RIGHT,fill=tk.BOTH,expand=True,padx=10,pady=10)
+        tk.Label(log_frame,text="运行日志",bg="white").pack(anchor="w",padx=5)
+        self.log_text = scrolledtext.ScrolledText(log_frame,width=28,height=12,bd=1,relief=tk.FLAT,font=("Consolas",9))
+        self.log_text.pack(fill=tk.BOTH,expand=True,padx=5,pady=5)
+
+    def add_field(self,parent,text):
+        frame = tk.Frame(parent,bg="white")
+        frame.pack(fill=tk.X,pady=6)
+        tk.Label(frame,text=text,width=5,bg="white",font=("微软雅黑",9)).pack(side=tk.LEFT)
+        entry = ttk.Entry(frame,font=("微软雅黑",9))
+        entry.pack(side=tk.LEFT,fill=tk.X,expand=True)
+        return entry
+
+    def log_msg(self, msg):
+        self.log_text.insert(tk.END, f"{msg}\n")
+        self.log_text.see(tk.END)
+
+    def set_status(self,text,color):
+        self.status.config(text=text,fg=color)
+
+    def random_account(self):
+        user = generate_random_username()
+        pwd = generate_random_password()
+        self.user.delete(0,tk.END)
+        self.user.insert(0,user)
+        self.pwd.delete(0,tk.END)
+        self.pwd.insert(0,pwd)
+        self.log_msg("已随机生成账号密码")
+        self.set_status("就绪","#16A34A")
+
+    def generate_email(self):
+        self.mail_api.reset()
+        self.api = JSAutoTaskRegister()
+        self.code.delete(0, tk.END)
+
+        self.log_msg("正在生成新邮箱...")
+        self.set_status("生成中...","#F59E0B")
+
+        def task():
+            email = self.mail_api.create_account()
+            if email:
+                self.root.after(0,lambda: (
+                    self.email.delete(0,tk.END),
+                    self.email.insert(0,email),
+                    self.log_msg(f"新邮箱生成成功：{email}"),
+                    self.log_msg("已清空历史邮件记录"),
+                    self.set_status("就绪","#16A34A")
+                ))
+            else:
+                self.root.after(0,lambda: (
+                    self.log_msg("邮箱生成失败"),
+                    self.set_status("失败","red")
+                ))
+        threading.Thread(target=task,daemon=True).start()
+
+    # ====================== 修复完成：先显示邮件 → 再识别 → 再填写 ======================
+    def refresh_messages(self):
+        if not self.mail_api.address:
+            self.log_msg("请先生成邮箱")
+            return
+
+        self.log_msg("------------------------------")
+        self.log_msg("正在获取当前邮箱邮件...")
+        self.set_status("获取邮件中...", "#F59E0B")
+
+        def task():
+            messages = self.mail_api.get_messages()
+            if not messages:
+                self.root.after(0, lambda: (
+                    self.log_msg("暂无邮件"),
+                    self.set_status("无邮件", "red")
+                ))
+                return
+
+            for msg in messages:
+                msg_id = msg.get("id")
+                subject = msg.get("subject", "无标题")
+                from_addr = msg.get("from", {}).get("address", "未知")
+                full = self.mail_api.get_message_content(msg_id)
+                text = full.get("text", "") if full else ""
+                html = full.get("html", "") if full else ""
+                content = text.strip() if text.strip() else html.strip()
+
+                self.root.after(0, lambda s=subject, f=from_addr, c=content: (
+                    self.log_msg(f"标题：{s}"),
+                    self.log_msg(f"发件人：{f}"),
+                    self.log_msg(f"内容：{c[:400]}"),
+                    self.log_msg("------------------------------")
+                ))
+                time.sleep(0.1)
+
+            # 强制提取验证码
+            code = self.mail_api.extract_6digit_code()
+            if code:
+                self.root.after(0, lambda: (
+                    self.code.delete(0, tk.END),
+                    self.code.insert(0, code),
+                    self.log_msg(f"✅ 验证码已识别：{code}"),
+                    self.log_msg("✅ 已自动填写到验证码框"),
+                    self.set_status("完成", "#16A34A")
+                ))
+            else:
+                self.root.after(0, lambda: (
+                    self.log_msg("❌ 未识别到6位数字验证码"),
+                    self.set_status("未找到", "red")
+                ))
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def send_code(self):
+        email = self.email.get()
+        if not email:
+            self.log_msg("请输入邮箱")
+            return
+        self.log_msg(f"正在发送验证码到：{email}")
+
+        def task():
+            self.api.send_email_code(email)
+            self.root.after(0, lambda: self.log_msg("验证码发送成功"))
+        threading.Thread(target=task,daemon=True).start()
+
+    def register(self):
+        u = self.user.get()
+        p = self.pwd.get()
+        e = self.email.get()
+        c = self.code.get()
+        i = self.invite.get()
+        if not u or not p or not e or not c:
+            messagebox.showwarning("提示","请填写完整")
+            return
+
+        self.btn_reg.config(state=tk.DISABLED,text="注册中")
+        self.log_msg("开始注册...")
+
+        def task():
+            res = self.api.register(u,p,e,c,i)
+            if res.get("succeed"):
+                self.success_count +=1
+                self.root.after(0,lambda: (
+                    self.count_lb.config(text=f"成功：{self.success_count}"),
+                    self.log_msg("========================"),
+                    self.log_msg("注册成功！"),
+                    self.log_msg(f"账号：{u}"),
+                    self.log_msg(f"密码：{p}"),
+                    self.log_msg("========================"),
+                    self.set_status("成功","#16A34A"),
+                    self.show_success(u,p)
+                ))
+            else:
+                self.root.after(0,lambda: (
+                    self.log_msg(f"注册失败：{res.get('data','未知错误')}"),
+                    self.set_status("失败","red")
+                ))
+            self.root.after(0,lambda: self.btn_reg.config(state=tk.NORMAL,text="立即注册"))
+        threading.Thread(target=task,daemon=True).start()
+
+    def show_success(self,user,pwd):
+        top = tk.Toplevel(self.root)
+        top.title("成功")
+        top.geometry("320x240")
+        top.resizable(False,False)
+        top.configure(bg="white")
+
+        try:
+            base_path = getattr(sys, '_MEIPASS', os.path.dirname(__file__))
+            top.iconbitmap(os.path.join(base_path,"favicon.ico"))
+        except:
+            pass
+
+        tk.Label(top, text="✅ 注册成功", bg="white", fg="#16A34A",
+                 font=("微软雅黑", 12, "bold")).pack(pady=8)
+
+        tk.Label(top, text=f"账号：{user}", bg="white", font=("微软雅黑", 9)).pack(pady=2)
+        tk.Button(top, text="复制账号", bg="#2563EB", fg="white", bd=0,
+                  padx=10, pady=4, font=("微软雅黑",9),
+                  command=lambda: (self.root.clipboard_clear(),
+                                   self.root.clipboard_append(user),
+                                   messagebox.showinfo("成功", "账号已复制"))).pack(pady=3)
+
+        tk.Label(top, text=f"密码：{pwd}", bg="white", font=("微软雅黑", 9)).pack(pady=2)
+        tk.Button(top, text="复制密码", bg="#0099FF", fg="white", bd=0,
+                  padx=10, pady=4, font=("微软雅黑",9),
+                  command=lambda: (self.root.clipboard_clear(),
+                                   self.root.clipboard_append(pwd),
+                                   messagebox.showinfo("成功", "密码已复制"))).pack(pady=3)
+
+        tk.Button(top, text="关闭", bg="#E5E7EB", fg="#333", bd=0,
+                  padx=10, pady=4, font=("微软雅黑",9),
+                  command=top.destroy).pack(pady=8)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = RegisterUI(root)
+    root.mainloop()

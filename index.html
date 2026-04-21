@@ -376,8 +376,11 @@
                 const response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json, text/plain, */*'
+                        'Accept': 'application/json, text/plain, */*',
+                        'Origin': this.baseUrl,
+                        'Referer': `${this.baseUrl}/register`
                     },
                     body: body
                 });
@@ -395,7 +398,13 @@
                     const backupProxy = 'https://api.allorigins.win/raw?url=';
                     const resp = await fetch(backupProxy + encodeURIComponent(url), {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json, text/plain, */*',
+                            'Origin': this.baseUrl,
+                            'Referer': `${this.baseUrl}/register`
+                        },
                         body: body
                     });
                     return await resp.json();
@@ -418,8 +427,11 @@
                 const response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json, text/plain, */*'
+                        'Accept': 'application/json, text/plain, */*',
+                        'Origin': this.baseUrl,
+                        'Referer': `${this.baseUrl}/register`
                     },
                     body: body
                 });
@@ -475,11 +487,12 @@
         setStatus('发送中...');
         
         const result = await regClient.sendEmailCode(email);
-        if(result && (result.succeed === true || result.code === 200 || result.status === 'success')) {
+        // 根据API文档，成功响应格式为 {"data": {"succeed": true, "message": "成功消息"}}
+        if(result && result.data && result.data.succeed === true) {
             addLog('✅ 验证码发送成功，请稍后点击「刷新邮件」获取', 'success');
             setStatus('验证码已发送');
         } else {
-            const errMsg = result?.message || result?.data || result?.error || '请求失败';
+            const errMsg = result?.data?.message || result?.message || result?.error || '请求失败';
             addLog(`❌ 发送失败: ${errMsg}`, 'error');
             setStatus('发送失败', true);
         }
