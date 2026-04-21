@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临时邮箱自动注册工具 | 修复跨域版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #F0F2F5;
+            font-family: 'Segoe UI', '微软雅黑', sans-serif;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e2a3a, #0f172a);
+            padding: 20px 28px;
+            color: white;
+        }
+        .header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .header p { opacity: 0.7; font-size: 0.85rem; }
+        .content { padding: 28px; }
+        .field { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .field label { width: 70px; font-weight: 500; color: #333; }
+        .field input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .field input:focus { border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0 20px; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-blue { background: #4F46E5; color: white; }
+        .btn-cyan { background: #0099FF; color: white; }
+        .btn-pink { background: #FF3366; color: white; }
+        .btn-gray { background: #6B7280; color: white; }
+        .btn-green { background: #16A34A; color: white; }
+        .btn:hover { transform: translateY(-1px); filter: brightness(0.95); }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 1px solid #eee;
+            font-size: 0.85rem;
+        }
+        .status { color: #16A34A; font-weight: 500; }
+        .log-area {
+            background: #0F172A;
+            border-radius: 20px;
+            padding: 16px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            margin-top: 16px;
+        }
+        .log-line { padding: 6px 0; border-bottom: 1px solid #2d3a4a; color: #e2e8f0; white-space: pre-wrap; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-warning { color: #fbbf24; }
+        .success-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 28px;
+            padding: 28px;
+            width: 320px;
+            text-align: center;
+        }
+        .copy-row { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 10px 16px; border-radius: 40px; margin: 12px 0; }
+        .copy-btn { background: #2563eb; color: white; border: none; padding: 4px 12px; border-radius: 30px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📧 临时邮箱自动注册</h1>
+        <p>制作者：奕涵 | 仅限临时注册使用</p>
+    </div>
+    <div class="content">
+        <div class="field">
+            <label>用户名</label>
+            <input type="text" id="username" placeholder="自动生成">
+        </div>
+        <div class="field">
+            <label>密码</label>
+            <input type="text" id="password" placeholder="自动生成">
+        </div>
+        <div class="field">
+            <label>邮箱</label>
+            <input type="text" id="email" placeholder="点击「生成邮箱」">
+        </div>
+        <div class="field">
+            <label>邀请人</label>
+            <input type="text" id="invite" placeholder="选填">
+        </div>
+        <div class="field">
+            <label>验证码</label>
+            <input type="text" id="code" placeholder="自动填写">
+        </div>
+
+        <div class="btn-group">
+            <button id="randomBtn" class="btn btn-blue">🎲 随机账号</button>
+            <button id="genEmailBtn" class="btn btn-cyan">📬 生成邮箱</button>
+            <button id="sendCodeBtn" class="btn btn-pink">📨 发送验证码</button>
+            <button id="refreshBtn" class="btn btn-gray">🔄 刷新邮件</button>
+            <button id="registerBtn" class="btn btn-green">✅ 立即注册</button>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusText" class="status">● 就绪</span>
+            <span id="successCount">✅ 成功：0</span>
+        </div>
+
+        <div class="log-area" id="logArea">
+            <div class="log-line">✨ 工具启动成功</div>
+            <div class="log-line">🔧 已通过代理解决跨域问题</div>
+            <div class="log-line">━━━━━━━━━━━━━━━━━━━━</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== 工具函数 ====================
+    function randomString(len=8) {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        return Array.from({length:len}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    }
+    function randomUsername() {
+        const prefixes = ['user', 'test', 'demo', 'guest', 'auto'];
+        return prefixes[Math.floor(Math.random()*prefixes.length)] + Math.floor(Math.random()*9000+1000);
+    }
+    function randomPassword() {
+        const lower = 'abcdefghijklmnopqrstuvwxyz';
+        const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const digits = '0123456789';
+        let p = '';
+        for(let i=0;i<4;i++) p += lower[Math.floor(Math.random()*lower.length)];
+        for(let i=0;i<2;i++) p += upper[Math.floor(Math.random()*upper.length)];
+        for(let i=0;i<3;i++) p += digits[Math.floor(Math.random()*digits.length)];
+        return p.split('').sort(()=>Math.random()-0.5).join('');
+    }
+
+    // 日志
+    const logArea = document.getElementById('logArea');
+    function addLog(msg, type='info') {
+        const div = document.createElement('div');
+        div.className = `log-line log-${type}`;
+        div.innerText = msg;
+        logArea.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        while(logArea.children.length > 200) logArea.removeChild(logArea.firstChild);
+    }
+
+    // UI 元素
+    const usernameInp = document.getElementById('username');
+    const passwordInp = document.getElementById('password');
+    const emailInp = document.getElementById('email');
+    const inviteInp = document.getElementById('invite');
+    const codeInp = document.getElementById('code');
+    const statusSpan = document.getElementById('statusText');
+    const successSpan = document.getElementById('successCount');
+    let successCount = 0;
+    function updateCount() { successSpan.innerText = `✅ 成功：${successCount}`; }
+    function setStatus(text, isError=false) {
+        statusSpan.innerText = text;
+        statusSpan.style.color = isError ? '#DC2626' : '#16A34A';
+    }
+
+    // 弹窗
+    function showSuccessModal(username, password) {
+        const modal = document.createElement('div');
+        modal.className = 'success-modal';
+        modal.innerHTML = `
+            <div class="modal-card">
+                <h3 style="color:#16A34A; margin-bottom:16px;">✅ 注册成功</h3>
+                <div class="copy-row">账号：${escapeHtml(username)} <button class="copy-btn" data-type="user">复制</button></div>
+                <div class="copy-row">密码：${escapeHtml(password)} <button class="copy-btn" data-type="pwd">复制</button></div>
+                <button class="close-modal" style="margin-top:16px; background:#e5e7eb; border:none; padding:8px 24px; border-radius:40px; cursor:pointer;">关闭</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('[data-type="user"]').onclick = () => { navigator.clipboard.writeText(username); addLog('✓ 账号已复制', 'success'); };
+        modal.querySelector('[data-type="pwd"]').onclick = () => { navigator.clipboard.writeText(password); addLog('✓ 密码已复制', 'success'); };
+        modal.querySelector('.close-modal').onclick = () => modal.remove();
+        modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+    }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+    // ==================== CORS 代理配置 ====================
+    // 使用免费的 CORS 代理（注意：生产环境建议自建代理，这里使用公开代理仅用于演示）
+    // 如果代理失效，可以替换为其他代理，如 https://cors-anywhere.herokuapp.com/
+    const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+    
+    // 封装带代理的请求（自动处理跨域）
+    async function proxiedFetch(targetUrl, options = {}) {
+        const method = options.method || 'GET';
+        const body = options.body;
+        const headers = options.headers || {};
+        
+        // 对于 POST 请求，需要特殊处理
+        if (method === 'POST' && body) {
+            // 使用 allorigins 的 POST 支持有限，改用另一个代理
+            // 换用 corsproxy.io
+            const proxy = 'https://corsproxy.io/?';
+            const finalUrl = proxy + encodeURIComponent(targetUrl);
+            const response = await fetch(finalUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...headers
+                },
+                body: body
+            });
+            return response;
+        } else {
+            const finalUrl = PROXY_URL + encodeURIComponent(targetUrl);
+            const response = await fetch(finalUrl, {
+                method: 'GET',
+                headers: headers
+            });
+            return response;
+        }
+    }
+
+    // ==================== Mail.tm API ====================
+    class MailTMApi {
+        constructor() {
+            this.baseUrl = 'https://api.mail.tm';
+            this.token = null;
+            this.address = null;
+            this.password = null;
+        }
+        async reset() { this.token = null; this.address = null; this.password = null; }
+        
+        async getDomains() {
+            try {
+                const resp = await fetch(`${this.baseUrl}/domains`);
+                const data = await resp.json();
+                return data['hydra:member'] || [];
+            } catch(e) { return []; }
+        }
+        
+        async createAccount() {
+            const domains = await this.getDomains();
+            if(!domains.length) return null;
+            const domain = domains[0].domain;
+            const username = `u${randomString(8)}`;
+            const pwd = randomPassword();
+            const address = `${username}@${domain}`;
+            try {
+                const resp = await fetch(`${this.baseUrl}/accounts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, password: pwd })
+                });
+                if(resp.status === 201) {
+                    this.address = address;
+                    this.password = pwd;
+                    return address;
+                }
+                return null;
+            } catch(e) { return null; }
+        }
+        
+        async getToken() {
+            if(!this.address || !this.password) return null;
+            try {
+                const resp = await fetch(`${this.baseUrl}/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: this.address, password: this.password })
+                });
+                if(resp.ok) {
+                    const data = await resp.json();
+                    this.token = data.token;
+                    return this.token;
+                }
+                return null;
+            } catch(e) { return null; }
+        }
+        
+        async getMessages() {
+            if(!this.token) await this.getToken();
+            if(!this.token) return [];
+            try {
+                const resp = await fetch(`${this.baseUrl}/messages`, {
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
+                const data = await resp.json();
+                return data['hydra:member'] || [];
+            } catch(e) { return []; }
+        }
+        
+        async getMessageContent(msgId) {
+            if(!this.token) await this.getToken();
+            if(!this.token) return null;
+            try {
+                const resp = await fetch(`${this.baseUrl}/messages/${msgId}`, {
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
+                return await resp.json();
+            } catch(e) { return null; }
+        }
+        
+        async extractCode() {
+            const msgs = await this.getMessages();
+            for(const msg of msgs) {
+                const full = await this.getMessageContent(msg.id);
+                if(!full) continue;
+                const text = (full.text || '') + (full.html || '');
+                const match = text.match(/\b\d{6}\b/g);
+                if(match && match.length) return match[0];
+            }
+            return null;
+        }
+        
+        async fetchAndShow() {
+            if(!this.address) throw new Error('无邮箱');
+            const msgs = await this.getMessages();
+            if(!msgs.length) { addLog('📭 暂无邮件', 'warning'); return null; }
+            for(const msg of msgs) {
+                const subject = msg.subject || '无标题';
+                const fromAddr = msg.from?.address || '未知';
+                addLog(`📩 标题: ${subject} | 发件人: ${fromAddr}`, 'info');
+            }
+            return await this.extractCode();
+        }
+    }
+
+    // ==================== 注册 API（通过代理解决跨域） ====================
+    class RegisterClient {
+        constructor() {
+            this.baseUrl = 'https://jsautotask.com';
+        }
+        
+        // 发送验证码 - 使用代理解决跨域
+        async sendEmailCode(email) {
+            const url = `${this.baseUrl}/api/register/getEmail`;
+            const body = JSON.stringify({ email });
+            
+            try {
+                // 使用 corsproxy.io 代理（支持 POST）
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*'
+                    },
+                    body: body
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('发送验证码错误:', error);
+                // 尝试备用代理
+                try {
+                    const backupProxy = 'https://api.allorigins.win/raw?url=';
+                    const resp = await fetch(backupProxy + encodeURIComponent(url), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: body
+                    });
+                    return await resp.json();
+                } catch (e) {
+                    return { error: error.message, succeed: false };
+                }
+            }
+        }
+        
+        // 注册 - 使用代理
+        async register(username, password, email, emailCode, inviteUser = '') {
+            const url = `${this.baseUrl}/api/register/register`;
+            const body = JSON.stringify({
+                username, password, confirmPassword: password,
+                email, emailCode, inviteUser
+            });
+            
+            try {
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*'
+                    },
+                    body: body
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('注册错误:', error);
+                return { error: error.message, succeed: false };
+            }
+        }
+    }
+
+    // ==================== 初始化 ====================
+    let mailApi = new MailTMApi();
+    let regClient = new RegisterClient();
+
+    // 随机账号
+    function randomAccount() {
+        usernameInp.value = randomUsername();
+        passwordInp.value = randomPassword();
+        addLog('🎲 已随机生成账号密码', 'success');
+    }
+
+    // 生成邮箱
+    async function generateEmail() {
+        await mailApi.reset();
+        addLog('📡 正在生成临时邮箱...', 'info');
+        setStatus('生成中...');
+        const email = await mailApi.createAccount();
+        if(email) {
+            emailInp.value = email;
+            codeInp.value = '';
+            addLog(`✅ 新邮箱生成成功: ${email}`, 'success');
+            setStatus('邮箱就绪');
+        } else {
+            addLog('❌ 邮箱生成失败', 'error');
+            setStatus('生成失败', true);
+        }
+    }
+
+    // 发送验证码
+    async function sendCode() {
+        const email = emailInp.value.trim();
+        if(!email) {
+            addLog('⚠️ 请先生成邮箱', 'warning');
+            return;
+        }
+        addLog(`📨 正在发送验证码到: ${email}`, 'info');
+        setStatus('发送中...');
+        
+        const result = await regClient.sendEmailCode(email);
+        if(result && (result.succeed === true || result.code === 200 || result.status === 'success')) {
+            addLog('✅ 验证码发送成功，请稍后点击「刷新邮件」获取', 'success');
+            setStatus('验证码已发送');
+        } else {
+            const errMsg = result?.message || result?.data || result?.error || '请求失败';
+            addLog(`❌ 发送失败: ${errMsg}`, 'error');
+            setStatus('发送失败', true);
+        }
+    }
+
+    // 刷新邮件并获取验证码
+    async function refreshMail() {
+        if(!mailApi.address) {
+            addLog('⚠️ 请先生成邮箱', 'warning');
+            return;
+        }
+        addLog('🔄 正在获取邮件...', 'info');
+        setStatus('获取邮件中...');
+        
+        try {
+            const code = await mailApi.fetchAndShow();
+            if(code) {
+                codeInp.value = code;
+                addLog(`✅ 验证码已自动填写: ${code}`, 'success');
+                setStatus('验证码已获取');
+            } else {
+                addLog('❌ 未找到6位数字验证码，请稍后重试', 'warning');
+                setStatus('未找到验证码', true);
+            }
+        } catch(e) {
+            addLog(`❌ 刷新失败: ${e.message}`, 'error');
+            setStatus('刷新失败', true);
+        }
+    }
+
+    // 注册
+    async function doRegister() {
+        const username = usernameInp.value.trim();
+        const password = passwordInp.value.trim();
+        const email = emailInp.value.trim();
+        const code = codeInp.value.trim();
+        const invite = inviteInp.value.trim();
+        
+        if(!username || !password || !email || !code) {
+            addLog('⚠️ 请填写完整信息', 'warning');
+            return;
+        }
+        
+        const btn = document.getElementById('registerBtn');
+        btn.disabled = true;
+        btn.innerText = '注册中...';
+        setStatus('注册中...');
+        addLog(`🚀 开始注册账号: ${username}`, 'info');
+        
+        const result = await regClient.register(username, password, email, code, invite);
+        
+        if(result && result.succeed === true) {
+            successCount++;
+            updateCount();
+            addLog(`🎉 注册成功！账号: ${username}  密码: ${password}`, 'success');
+            setStatus('注册成功');
+            showSuccessModal(username, password);
+        } else {
+            const errMsg = result?.data || result?.message || result?.error || '未知错误';
+            addLog(`❌ 注册失败: ${errMsg}`, 'error');
+            setStatus('注册失败', true);
+        }
+        
+        btn.disabled = false;
+        btn.innerText = '✅ 立即注册';
+    }
+
+    // 绑定事件
+    document.getElementById('randomBtn').onclick = randomAccount;
+    document.getElementById('genEmailBtn').onclick = generateEmail;
+    document.getElementById('sendCodeBtn').onclick = sendCode;
+    document.getElementById('refreshBtn').onclick = refreshMail;
+    document.getElementById('registerBtn').onclick = doRegister;
+    
+    updateCount();
+    addLog('💡 使用说明：生成邮箱 → 发送验证码 → 刷新邮件 → 注册', 'info');
+</script>
+</body>
+</html>
