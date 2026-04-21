@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>自动注册工具 | 服务器版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #EFF3F8;
+            font-family: 'Inter', 'Segoe UI', '微软雅黑', system-ui, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #1E2A3A, #0F172A);
+            border-radius: 28px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.8rem; letter-spacing: -0.3px; }
+        .badge { background: #FFB347; color: #1E2A3A; padding: 6px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; margin-top: 8px; display: inline-block; }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .field-row label {
+            width: 80px;
+            font-weight: 500;
+            color: #1E293B;
+        }
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #CBD5E1;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            background: #FEFEFE;
+            transition: 0.2s;
+            outline: none;
+        }
+        input:focus { border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #F1F5F9;
+            color: #1E293B;
+        }
+        .btn-primary { background: #4F46E5; color: white; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
+        .btn-primary:hover { background: #4338CA; transform: translateY(-1px);}
+        .btn-success { background: #16A34A; color: white; }
+        .btn-danger { background: #DC2626; color: white; }
+        .btn-warning { background: #FF9800; color: white; }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #EDF2F7;
+            font-size: 0.85rem;
+        }
+
+        .log-box {
+            background: #0F172A;
+            color: #E2E8F0;
+            border-radius: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 0.8rem;
+            padding: 16px;
+        }
+        .log-line {
+            padding: 6px 0;
+            border-bottom: 1px solid #2D3A4A;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-success { color: #4ADE80; }
+        .log-error { color: #F87171; }
+        .log-warning { color: #FBBF24; }
+
+        .result-card {
+            background: #F8FAFE;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid #E2E8F0;
+        }
+        .result-card h3 {
+            color: #16A34A;
+            margin-bottom: 12px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 12px;
+        }
+        .result-label {
+            font-weight: 500;
+            color: #4B5563;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @media (max-width: 700px) {
+            .field-row { flex-direction: column; align-items: flex-start; }
+            .field-row label { width: auto; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚡ 自动注册工作台</h1>
+        <div style="font-size:0.85rem; opacity:0.8; margin-top: 8px;">服务器版 | 临时邮箱 + 验证码自动识别</div>
+        <div class="badge">by 奕涵</div>
+    </div>
+
+    <div class="card">
+        <div class="field-row">
+            <label>用户名</label>
+            <input type="text" id="username" placeholder="自动生成或手动填写">
+        </div>
+        <div class="field-row">
+            <label>密码</label>
+            <input type="text" id="password" placeholder="随机生成">
+        </div>
+        <div class="field-row">
+            <label>邀请人</label>
+            <input type="text" id="invite" placeholder="选填">
+        </div>
+
+        <div class="btn-group">
+            <button id="randomBtn" class="btn btn-primary">🎲 随机账号</button>
+            <button id="registerBtn" class="btn btn-success">✅ 开始注册</button>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusMsg" style="color:#16A34A; font-weight:500;">● 就绪</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: 700;">📋 注册结果</span>
+            <button id="clearLogBtn" class="btn" style="padding: 6px 12px; font-size: 0.8rem;">🗑️ 清空</button>
+        </div>
+        <div id="logPanel" class="log-box">
+            <div class="log-line">✨ 服务器版启动完成</div>
+            <div class="log-line">📌 点击「开始注册」自动完成：生成邮箱 → 发验证码 → 提取验证码 → 注册</div>
+            <div class="log-line">━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+        </div>
+    </div>
+
+    <div id="resultCard" class="card result-card" style="display: none;">
+        <h3>✅ 注册成功</h3>
+        <div class="result-item">
+            <span class="result-label">账号:</span>
+            <span id="resultUsername" class="result-value"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">密码:</span>
+            <span id="resultPassword" class="result-value"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">邮箱:</span>
+            <span id="resultEmail" class="result-value"></span>
+        </div>
+        <button id="copyBtn" class="btn btn-primary" style="margin-top: 16px; width: 100%;">📋 复制账号信息</button>
+    </div>
+</div>
+
+<script>
+    // 工具函数
+    function randomString(len=8) {
+        const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        return Array.from({length:len},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+    }
+    
+    function randomUsername() {
+        const prefixes = ['user','test','demo','auto','reg'];
+        return prefixes[Math.floor(Math.random()*prefixes.length)] + Math.floor(Math.random()*9000+1000);
+    }
+    
+    function randomPassword() {
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const digits = "0123456789";
+        let p = '';
+        for(let i=0;i<4;i++) p+=lower[Math.floor(Math.random()*lower.length)];
+        for(let i=0;i<2;i++) p+=upper[Math.floor(Math.random()*upper.length)];
+        for(let i=0;i<3;i++) p+=digits[Math.floor(Math.random()*digits.length)];
+        return p.split('').sort(()=>Math.random()-0.5).join('');
+    }
+
+    // 日志
+    const logPanel = document.getElementById('logPanel');
+    function addLog(msg, type='info') {
+        const div = document.createElement('div');
+        div.className = `log-line log-${type}`;
+        div.innerText = msg;
+        logPanel.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        while(logPanel.children.length > 100) logPanel.removeChild(logPanel.firstChild);
+    }
+
+    // UI元素
+    const usernameInp = document.getElementById('username');
+    const passwordInp = document.getElementById('password');
+    const inviteInp = document.getElementById('invite');
+    const statusSpan = document.getElementById('statusMsg');
+    const resultCard = document.getElementById('resultCard');
+    const resultUsername = document.getElementById('resultUsername');
+    const resultPassword = document.getElementById('resultPassword');
+    const resultEmail = document.getElementById('resultEmail');
+
+    function setStatus(text, isError=false) {
+        statusSpan.innerText = text;
+        statusSpan.style.color = isError ? '#DC2626' : '#16A34A';
+    }
+
+    // 随机账号
+    function randomAccount() {
+        usernameInp.value = randomUsername();
+        passwordInp.value = randomPassword();
+        addLog("随机账号密码已填入",'success');
+    }
+
+    // 开始注册
+    async function startRegister() {
+        const username = usernameInp.value.trim();
+        const password = passwordInp.value.trim();
+        const invite = inviteInp.value.trim();
+
+        setStatus("注册中...", false);
+        addLog("🚀 开始注册流程", 'info');
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password, invite })
+            });
+
+            const result = await response.json();
+
+            if(result.success) {
+                addLog(`🎉 注册成功! 账号: ${result.data.username}`, 'success');
+                setStatus("注册成功", false);
+                
+                // 显示结果
+                resultUsername.innerText = result.data.username;
+                resultPassword.innerText = result.data.password;
+                resultEmail.innerText = result.data.email;
+                resultCard.style.display = 'block';
+            } else {
+                addLog(`❌ 注册失败: ${result.message}`, 'error');
+                setStatus("注册失败", true);
+            }
+        } catch(error) {
+            addLog(`❌ 网络错误: ${error.message}`, 'error');
+            setStatus("网络错误", true);
+        }
+    }
+
+    // 复制账号信息
+    function copyAccountInfo() {
+        const username = resultUsername.innerText;
+        const password = resultPassword.innerText;
+        const email = resultEmail.innerText;
+        
+        const info = `账号: ${username}\n密码: ${password}\n邮箱: ${email}`;
+        
+        navigator.clipboard.writeText(info).then(() => {
+            addLog("📋 账号信息已复制", 'success');
+        }).catch(err => {
+            addLog("❌ 复制失败", 'error');
+        });
+    }
+
+    // 事件绑定
+    document.getElementById('randomBtn').onclick = randomAccount;
+    document.getElementById('registerBtn').onclick = startRegister;
+    document.getElementById('clearLogBtn').onclick = () => {
+        logPanel.innerHTML = '<div class="log-line">✨ 日志已清空</div>';
+    };
+    document.getElementById('copyBtn').onclick = copyAccountInfo;
+
+    addLog("🔧 服务器版已启动，所有操作在服务器端执行", 'success');
+    addLog("💡 适合部署在Vercel等平台", 'info');
+</script>
+</body>
+</html>
