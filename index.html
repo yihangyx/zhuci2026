@@ -12,81 +12,81 @@
             background-position: center;
             background-attachment: fixed;
             font-family: 'Segoe UI', 'SF Pro Display', '微软雅黑', sans-serif;
-            padding: 40px 20px;
+            padding: 20px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             width: 100%;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-radius: 24px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.15);
             backdrop-filter: blur(15px);
             overflow: hidden;
         }
         .header {
             background: rgba(25, 25, 25, 0.95);
-            padding: 20px 30px;
+            padding: 24px 36px;
             color: white;
-            height: 70px;
+            height: 90px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .header h1 { font-size: 1.6rem; font-weight: 600; }
-        .header p { opacity: 0.8; font-size: 1rem; }
+        .header h1 { font-size: 2rem; font-weight: 600; }
+        .header p { opacity: 0.8; font-size: 1.1rem; }
         .content {
-            padding: 30px 30px;
+            padding: 40px 40px;
             display: flex;
-            gap: 30px;
+            gap: 40px;
         }
         .left-section {
             flex: 1;
-            min-width: 400px;
+            min-width: 450px;
         }
         .right-section {
             flex: 1;
-            min-width: 350px;
+            min-width: 400px;
             display: flex;
             flex-direction: column;
         }
-        .field { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
-        .field label { width: 80px; font-weight: 500; color: #333; font-size: 1rem; }
+        .field { margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+        .field label { width: 100px; font-weight: 500; color: #333; font-size: 1.2rem; }
         .field input {
             flex: 1;
-            padding: 12px 18px;
+            padding: 16px 24px;
             border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 16px;
+            font-size: 1.2rem;
             font-family: 'Segoe UI', 'SF Pro Display', '微软雅黑', sans-serif;
             outline: none;
             transition: 0.2s;
             background: rgba(255, 255, 255, 0.8);
         }
-        .field input:focus { border-color: #007AFF; box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1); }
+        .field input:focus { border-color: #007AFF; box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin: 20px 0 24px;
+            gap: 12px;
+            margin: 24px 0 30px;
         }
         .btn {
             flex: 1;
-            padding: 12px 20px;
-            border-radius: 12px;
+            padding: 16px 24px;
+            border-radius: 16px;
             border: none;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-family: 'Segoe UI', 'SF Pro Display', '微软雅黑', sans-serif;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .btn-blue { background: #007AFF; color: white; }
         .btn-cyan { background: #34C759; color: white; }
         .btn-pink { background: #FF3B30; color: white; }
@@ -96,56 +96,108 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 24px;
-            padding: 16px 0;
+            margin-top: 30px;
+            padding: 20px 0;
             border-top: 1px solid #e0e0e0;
             background: rgba(255, 255, 255, 0.8);
-            border-radius: 0 0 20px 20px;
         }
-        .status { color: #34C759; font-weight: 500; font-size: 1rem; }
+        .status { color: #34C759; font-weight: 500; font-size: 1.1rem; }
         .log-area {
             background: rgba(255, 255, 255, 0.9);
             border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 15px 15px;
+            border-radius: 16px;
+            padding: 20px 20px;
             flex: 1;
             overflow-y: auto;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            max-height: 400px;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-height: 500px;
         }
         .log-area::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         .log-area::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
+            border-radius: 5px;
         }
         .log-area::-webkit-scrollbar-thumb {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
+            border-radius: 5px;
         }
         .log-area::-webkit-scrollbar-thumb:hover {
             background: rgba(0, 0, 0, 0.3);
         }
-        .log-line { padding: 6px 0; color: #333; white-space: pre-wrap; }
+        .log-line { padding: 8px 0; color: #333; white-space: pre-wrap; }
         .log-success { color: #34C759; }
         .log-error { color: #FF3B30; }
         .log-warning { color: #FF9500; }
-        .success-count { font-size: 1rem; font-weight: 500; }
+        .success-count { font-size: 1.1rem; font-weight: 500; }
         .log-header {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #333;
         }
+        .footer {
+            background: rgba(25, 25, 25, 0.95);
+            padding: 16px 36px;
+            color: white;
+            text-align: center;
+            font-size: 1rem;
+            opacity: 0.8;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                border-radius: 20px;
+            }
+            .header {
+                padding: 20px 24px;
+                height: auto;
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            .header h1 { font-size: 1.6rem; }
             .content {
                 flex-direction: column;
+                padding: 24px 24px;
+                gap: 24px;
             }
+            .left-section,
             .right-section {
-                min-height: 400px;
+                min-width: auto;
+            }
+            .field {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .field label {
+                width: 100%;
+                font-size: 1rem;
+            }
+            .field input {
+                width: 100%;
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+            .btn-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .btn {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+            .log-area {
+                max-height: 300px;
+                font-size: 0.9rem;
             }
         }
         .success-modal {
@@ -162,7 +214,8 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 30px;
-            width: 350px;
+            width: 90%;
+            max-width: 400px;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             backdrop-filter: blur(15px);
@@ -225,6 +278,9 @@
                 <div class="log-line">==========================</div>
             </div>
         </div>
+    </div>
+    <div class="footer">
+        @2026 by 奕涵
     </div>
 </div>
 
