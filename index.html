@@ -139,18 +139,22 @@
             font-size: 1.2rem;
             color: #333;
         }
-        .footer {
+        .global-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: rgba(25, 25, 25, 0.95);
-            padding: 16px 36px;
+            padding: 12px 20px;
             color: white;
             text-align: center;
-            font-size: 1rem;
+            font-size: 0.9rem;
             opacity: 0.8;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
         }
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 10px 10px 60px 10px;
             }
             .container {
                 max-width: 100%;
@@ -165,12 +169,17 @@
             }
             .header h1 { font-size: 1.6rem; }
             .content {
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 padding: 24px 24px;
                 gap: 24px;
             }
-            .left-section,
+            .left-section {
+                flex: 1 1 100%;
+                min-width: auto;
+            }
             .right-section {
+                flex: 1 1 100%;
                 min-width: auto;
             }
             .field {
@@ -188,16 +197,31 @@
                 padding: 12px 16px;
             }
             .btn-group {
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 gap: 8px;
             }
             .btn {
-                font-size: 1rem;
-                padding: 12px 16px;
+                flex: 1 1 calc(50% - 4px);
+                font-size: 0.9rem;
+                padding: 10px 14px;
+                border-radius: 12px;
             }
             .log-area {
-                max-height: 300px;
-                font-size: 0.9rem;
+                max-height: 250px;
+                font-size: 0.85rem;
+                padding: 12px 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .content {
+                flex-direction: column;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn {
+                flex: 1 1 100%;
             }
         }
         .success-modal {
@@ -279,9 +303,10 @@
             </div>
         </div>
     </div>
-    <div class="footer">
-        @2026 by 奕涵
-    </div>
+</div>
+
+<div class="global-footer">
+    @2026 by 奕涵
 </div>
 
 <script>
