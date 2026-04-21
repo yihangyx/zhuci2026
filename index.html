@@ -14,7 +14,7 @@
 
         :root {
             --primary: #6366F1;
-            --primary-light: #818CF8;
+            --primary-light: #8CF8;
             --primary-dark: #4F46E5;
             --success: #10B981;
             --warning: #F59E0B;
@@ -23,7 +23,7 @@
             --gray-100: #F3F4F6;
             --gray-200: #E5E7EB;
             --gray-300: #D1D5DB;
-            --gray-600: #4B5563;
+            --gray-600: #4B563;
             --gray-800: #1F2937;
             --card-bg: #ffffff;
         }
@@ -54,6 +54,12 @@
             position: relative;
             z-index: 1;
             animation: fadeUp 0.6s ease-out;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .container.unlocked {
+            opacity: 1;
+            pointer-events: all;
         }
 
         @keyframes fadeUp {
@@ -158,6 +164,7 @@
         .input-row {
             display: flex;
             gap: 12px;
+            align-items: center;
         }
 
         .btn-group {
@@ -397,6 +404,30 @@
     </div>
 </div>
 
+<!-- 进入页面强制验证弹窗 -->
+<div id="initCaptchaModal" class="modal">
+    <div class="modal-content" style="max-width:380px;">
+        <h3 class="modal-title" style="margin-bottom:20px;">请完成安全验证</h3>
+        <canvas id="initCaptchaCanvas" style="width:180px;height:70px;border-radius:10px;border:1px solid #ddd;margin-bottom:16px;"></canvas>
+        <div class="field" style="margin-bottom:20px;">
+            <input type="text" id="initCaptchaInput" placeholder="请输入图片验证码" style="text-align:center;font-size:16px;padding:10px;">
+        </div>
+        <button onclick="checkInitCaptcha()" class="btn btn-primary btn-block">确认进入</button>
+    </div>
+</div>
+
+<!-- 注册二次验证弹窗 -->
+<div id="regCaptchaModal" class="modal">
+    <div class="modal-content" style="max-width:380px;">
+        <h3 class="modal-title" style="margin-bottom:20px;">安全验证</h3>
+        <canvas id="regCaptchaCanvas" style="width:180px;height:70px;border-radius:10px;border:1px solid #ddd;margin-bottom:16px;"></canvas>
+        <div class="field" style="margin-bottom:20px;">
+            <input type="text" id="regCaptchaInput" placeholder="请输入验证码" style="text-align:center;font-size:16px;padding:10px;">
+        </div>
+        <button onclick="submitRegCaptcha()" class="btn btn-primary btn-block">确认注册</button>
+    </div>
+</div>
+
 <script>
     // 工具函数
     function randomString(len=8) {
@@ -443,6 +474,15 @@
     const tipText = document.getElementById('tipText');
     let successCount = 0;
 
+    // 发送验证码冷却
+    let codeCooldown = 0;
+    let codeTimer = null;
+
+    // 注册验证控制
+    let needCaptcha = false;
+    let regCaptchaCode = '';
+    let tempRegisterData = null;
+
     // 弹窗控制
     function showTip(title, text, isSuccess=true) {
         tipTitle.textContent = title;
@@ -474,6 +514,107 @@
         if(btn) {
             btn.scrollIntoView({ behavior:'smooth', block:'center' });
         }
+    }
+
+    // ==================== 初始弹窗验证码（超大） ====================
+    let initCode = '';
+    function drawInitCaptcha() {
+        const canvas = document.getElementById('initCaptchaCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0,0,w,h);
+
+        const chars = 'ABCDEFGHJKLMNPQRSTWXY2345678';
+        let code = '';
+        for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+        initCode = code;
+
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0,0,w,h);
+
+        for(let i=0;i<3;i++){
+            ctx.strokeStyle = `rgb(${Math.random()*80+50},${Math.random()*80+50},${Math.random()*80+50})`;
+            ctx.beginPath();
+            ctx.moveTo(Math.random()*w, Math.random()*h);
+            ctx.lineTo(Math.random()*w, Math.random()*h);
+            ctx.stroke();
+        }
+
+        ctx.font = 'bold 44px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#111';
+        
+        const sp = w / 5;
+        for(let i=0;i<4;i++){
+            ctx.fillText(code[i], sp*(i+1), h/2);
+        }
+        
+        document.getElementById('initCaptchaInput').value = '';
+    }
+
+    function checkInitCaptcha() {
+        const val = document.getElementById('initCaptchaInput').value.trim().toUpperCase();
+        if(val === initCode.toUpperCase()){
+            document.getElementById('initCaptchaModal').classList.remove('show');
+            document.querySelector('.container').classList.add('unlocked');
+        }else{
+            showTip('验证失败','验证码不正确，请重试！',false);
+            drawInitCaptcha();
+        }
+    }
+
+    // ==================== 注册弹窗验证码 ====================
+    function drawRegCaptcha() {
+        const canvas = document.getElementById('regCaptchaCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0,0,w,h);
+
+        const chars = 'ABCDEFGHJKLMNPQRSTWXY2345678';
+        let code = '';
+        for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+        regCaptchaCode = code;
+
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0,0,w,h);
+
+        for(let i=0;i<3;i++){
+            ctx.strokeStyle = `rgb(${Math.random()*80+50},${Math.random()*80+50},${Math.random()*80+50})`;
+            ctx.beginPath();
+            ctx.moveTo(Math.random()*w, Math.random()*h);
+            ctx.lineTo(Math.random()*w, Math.random()*h);
+            ctx.stroke();
+        }
+
+        ctx.font = 'bold 44px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#111';
+        
+        const sp = w / 5;
+        for(let i=0;i<4;i++){
+            ctx.fillText(code[i], sp*(i+1), h/2);
+        }
+        
+        document.getElementById('regCaptchaInput').value = '';
+    }
+
+    // ==================== 发送验证码60秒限制 ====================
+    function startCodeTimer() {
+        codeCooldown = 60;
+        const btn = document.getElementById('sendCodeBtn');
+        btn.disabled = true;
+        btn.textContent = `${codeCooldown}s`;
+        codeTimer = setInterval(()=>{
+            codeCooldown--;
+            btn.textContent = `${codeCooldown}s`;
+            if(codeCooldown <=0){
+                clearInterval(codeTimer);
+                btn.disabled = false;
+                btn.textContent = '获取';
+            }
+        },1000);
     }
 
     // Mail.tm API
@@ -608,11 +749,14 @@
         }
     }
 
-    // 发送验证码 → 弹窗提示
+    // 发送验证码
     async function sendCode(){
+        if(codeCooldown>0) return;
         const email=emailInp.value.trim();
         if(!email){addLog('请先生成邮箱','warning');return;}
+
         addLog(`正在发送验证码到：${email}`,'info');
+        startCodeTimer();
         
         const result=await regClient.sendEmailCode(email);
         if(result&&result.data&&result.data.succeed===true){
@@ -625,7 +769,7 @@
         }
     }
 
-    // 刷新邮件 → 识别成功弹窗提示点击注册
+    // 刷新邮件
     async function refreshMail(){
         if(!mailApi.address){addLog('请先生成邮箱','warning');return;}
         addLog('------------------------------','info');
@@ -658,6 +802,29 @@
         }
     }
 
+    // 真实注册
+    async function doRealRegister(u,p,e,c,i){
+        const btn=document.getElementById('registerBtn');
+        btn.disabled=true; btn.textContent='注册中...';
+        
+        const res=await regClient.register(u,p,e,c,i);
+        if(res.succeed){
+            successCount++;
+            needCaptcha = true;
+            updateCount();
+            addLog('========================','info');
+            addLog('注册成功！','success');
+            addLog(`账号：${u}`,'info');
+            addLog(`密码：${p}`,'info');
+            addLog('========================','info');
+            showSuccessModal(u,p);
+            codeInp.value = '';
+        }else{
+            addLog(`注册失败：${res.message||'未知错误'}`,'error');
+        }
+        btn.disabled=false; btn.textContent='立即注册';
+    }
+
     // 注册
     async function doRegister(){
         const u=usernameInp.value.trim();
@@ -667,23 +834,31 @@
         const i=inviteInp.value.trim();
         
         if(!u||!p||!e||!c){addLog('请填写完整','warning');return;}
-        
-        const btn=document.getElementById('registerBtn');
-        btn.disabled=true; btn.textContent='注册中...';
-        
-        const res=await regClient.register(u,p,e,c,i);
-        if(res.succeed){
-            successCount++; updateCount();
-            addLog('========================','info');
-            addLog('注册成功！','success');
-            addLog(`账号：${u}`,'info');
-            addLog(`密码：${p}`,'info');
-            addLog('========================','info');
-            showSuccessModal(u,p);
-        }else{
-            addLog(`注册失败：${res.message||'未知错误'}`,'error');
+
+        // 第二次注册弹出验证码
+        if(needCaptcha){
+            tempRegisterData = {u,p,e,c,i};
+            drawRegCaptcha();
+            document.getElementById('regCaptchaModal').classList.add('show');
+            return;
         }
-        btn.disabled=false; btn.textContent='立即注册';
+
+        await doRealRegister(u,p,e,c,i);
+    }
+
+    // 提交注册验证码
+    function submitRegCaptcha(){
+        const val = document.getElementById('regCaptchaInput').value.trim().toUpperCase();
+        if(val === regCaptchaCode.toUpperCase()){
+            document.getElementById('regCaptchaModal').classList.remove('show');
+            if(tempRegisterData){
+                doRealRegister(tempRegisterData.u, tempRegisterData.p, tempRegisterData.e, tempRegisterData.c, tempRegisterData.i);
+                tempRegisterData = null;
+            }
+        }else{
+            showTip('验证失败','验证码不正确',false);
+            drawRegCaptcha();
+        }
     }
 
     // 绑定
@@ -693,7 +868,14 @@
     document.getElementById('refreshBtn').onclick=refreshMail;
     document.getElementById('registerBtn').onclick=doRegister;
 
+    // 初始化
     updateCount();
+
+    // 打开页面强制弹窗验证
+    window.onload = function(){
+        document.getElementById('initCaptchaModal').classList.add('show');
+        drawInitCaptcha();
+    };
 </script>
 </body>
 </html>
