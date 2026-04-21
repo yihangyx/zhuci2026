@@ -57,7 +57,7 @@
             transition: 0.2s;
         }
         .field input:focus { border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0 20px; }
+        .btn-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 24px 0 20px; }
         .btn {
             padding: 10px 20px;
             border-radius: 40px;
@@ -82,7 +82,8 @@
         }
         .status { color: #16A34A; font-weight: 500; }
         .log-area {
-            background: #0F172A;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 20px;
             padding: 16px;
             flex: 1;
@@ -90,10 +91,10 @@
             font-family: 'Consolas', monospace;
             font-size: 0.8rem;
         }
-        .log-line { padding: 6px 0; border-bottom: 1px solid #2d3a4a; color: #e2e8f0; white-space: pre-wrap; }
-        .log-success { color: #4ade80; }
-        .log-error { color: #f87171; }
-        .log-warning { color: #fbbf24; }
+        .log-line { padding: 6px 0; border-bottom: 1px solid #e2e8f0; color: #334155; white-space: pre-wrap; }
+        .log-success { color: #16a34a; }
+        .log-error { color: #dc2626; }
+        .log-warning { color: #d97706; }
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -153,16 +154,16 @@
             </div>
 
             <div class="btn-group">
-                <button id="randomBtn" class="btn btn-blue">🎲 随机账号</button>
-                <button id="genEmailBtn" class="btn btn-cyan">📬 生成邮箱</button>
-                <button id="sendCodeBtn" class="btn btn-pink">📨 发送验证码</button>
-                <button id="refreshBtn" class="btn btn-gray">🔄 刷新邮件</button>
-                <button id="registerBtn" class="btn btn-green">✅ 立即注册</button>
+                <button id="randomBtn" class="btn btn-blue">随机账号</button>
+                <button id="genEmailBtn" class="btn btn-cyan">生成邮箱</button>
+                <button id="sendCodeBtn" class="btn btn-pink">发送验证码</button>
+                <button id="refreshBtn" class="btn btn-gray">刷新邮件</button>
+                <button id="registerBtn" class="btn btn-green">立即注册</button>
             </div>
 
             <div class="status-bar">
                 <span id="statusText" class="status">● 就绪</span>
-                <span id="successCount">✅ 成功：0</span>
+                <span id="successCount">成功：0</span>
             </div>
         </div>
         <div class="right-section">
@@ -228,15 +229,15 @@
         modal.className = 'success-modal';
         modal.innerHTML = `
             <div class="modal-card">
-                <h3 style="color:#16A34A; margin-bottom:16px;">✅ 注册成功</h3>
+                <h3 style="color:#16A34A; margin-bottom:16px;">注册成功</h3>
                 <div class="copy-row">账号：${escapeHtml(username)} <button class="copy-btn" data-type="user">复制</button></div>
                 <div class="copy-row">密码：${escapeHtml(password)} <button class="copy-btn" data-type="pwd">复制</button></div>
                 <button class="close-modal" style="margin-top:16px; background:#e5e7eb; border:none; padding:8px 24px; border-radius:40px; cursor:pointer;">关闭</button>
             </div>
         `;
         document.body.appendChild(modal);
-        modal.querySelector('[data-type="user"]').onclick = () => { navigator.clipboard.writeText(username); addLog('✓ 账号已复制', 'success'); };
-        modal.querySelector('[data-type="pwd"]').onclick = () => { navigator.clipboard.writeText(password); addLog('✓ 密码已复制', 'success'); };
+        modal.querySelector('[data-type="user"]').onclick = () => { navigator.clipboard.writeText(username); addLog('账号已复制', 'success'); };
+        modal.querySelector('[data-type="pwd"]').onclick = () => { navigator.clipboard.writeText(password); addLog('密码已复制', 'success'); };
         modal.querySelector('.close-modal').onclick = () => modal.remove();
         modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
     }
